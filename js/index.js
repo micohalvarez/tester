@@ -377,11 +377,23 @@ function calculateAndDisplayRoute(
     function(response, status) {
       if (status == 'OK') {
         directionsDisplay.setDirections(response);
+        var leg = response.routes[0].legs[0];
+
+        makeMarker(leg.end_location, '/images/pin_icon.png', 'title');
       } else {
         window.alert('Directions request failed due to ' + status);
       }
     }
   );
+}
+
+function makeMarker(position, icon, title) {
+  new google.maps.Marker({
+    position: position,
+    map: map,
+    icon: icon,
+    title: title
+  });
 }
 function renderCard(data) {
   const card = new Card(data);
@@ -453,11 +465,187 @@ function geocodeAddress(address, map, icon, title) {
     }
   });
 }
-
+var map;
 function initMap() {
-  const map = new google.maps.Map(document.getElementById('map'), {
+  map = new google.maps.Map(document.getElementById('map'), {
     zoom: 6,
     center: new google.maps.LatLng(-41.0, 174.0),
+    styles: [
+      {
+        featureType: 'water',
+        elementType: 'geometry',
+        stylers: [
+          {
+            color: '#e9e9e9'
+          },
+          {
+            lightness: 17
+          }
+        ]
+      },
+      {
+        featureType: 'landscape',
+        elementType: 'geometry',
+        stylers: [
+          {
+            color: '#f5f5f5'
+          },
+          {
+            lightness: 20
+          }
+        ]
+      },
+      {
+        featureType: 'road.highway',
+        elementType: 'geometry.fill',
+        stylers: [
+          {
+            color: '#ffffff'
+          },
+          {
+            lightness: 17
+          }
+        ]
+      },
+      {
+        featureType: 'road.highway',
+        elementType: 'geometry.stroke',
+        stylers: [
+          {
+            color: '#ffffff'
+          },
+          {
+            lightness: 29
+          },
+          {
+            weight: 0.2
+          }
+        ]
+      },
+      {
+        featureType: 'road.arterial',
+        elementType: 'geometry',
+        stylers: [
+          {
+            color: '#ffffff'
+          },
+          {
+            lightness: 18
+          }
+        ]
+      },
+      {
+        featureType: 'road.local',
+        elementType: 'geometry',
+        stylers: [
+          {
+            color: '#ffffff'
+          },
+          {
+            lightness: 16
+          }
+        ]
+      },
+      {
+        featureType: 'poi',
+        elementType: 'geometry',
+        stylers: [
+          {
+            color: '#f5f5f5'
+          },
+          {
+            lightness: 21
+          }
+        ]
+      },
+      {
+        featureType: 'poi.park',
+        elementType: 'geometry',
+        stylers: [
+          {
+            color: '#dedede'
+          },
+          {
+            lightness: 21
+          }
+        ]
+      },
+      {
+        elementType: 'labels.text.stroke',
+        stylers: [
+          {
+            visibility: 'on'
+          },
+          {
+            color: '#ffffff'
+          },
+          {
+            lightness: 16
+          }
+        ]
+      },
+      {
+        elementType: 'labels.text.fill',
+        stylers: [
+          {
+            saturation: 36
+          },
+          {
+            color: '#333333'
+          },
+          {
+            lightness: 40
+          }
+        ]
+      },
+      {
+        elementType: 'labels.icon',
+        stylers: [
+          {
+            visibility: 'off'
+          }
+        ]
+      },
+      {
+        featureType: 'transit',
+        elementType: 'geometry',
+        stylers: [
+          {
+            color: '#f2f2f2'
+          },
+          {
+            lightness: 19
+          }
+        ]
+      },
+      {
+        featureType: 'administrative',
+        elementType: 'geometry.fill',
+        stylers: [
+          {
+            color: '#fefefe'
+          },
+          {
+            lightness: 20
+          }
+        ]
+      },
+      {
+        featureType: 'administrative',
+        elementType: 'geometry.stroke',
+        stylers: [
+          {
+            color: '#fefefe'
+          },
+          {
+            lightness: 17
+          },
+          {
+            weight: 1.2
+          }
+        ]
+      }
+    ],
     mapTypeId: google.maps.MapTypeId.ROADMAP,
     zoomControl: true,
     panControl: true,
@@ -474,7 +662,9 @@ function initMap() {
     streetViewControl: false
   });
 
-  var directionsDisplay = new google.maps.DirectionsRenderer();
+  var directionsDisplay = new google.maps.DirectionsRenderer({
+    suppressMarkers: true
+  });
   var directionsService = new google.maps.DirectionsService();
 
   directionsDisplay.setMap(map);
