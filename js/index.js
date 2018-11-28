@@ -21,12 +21,12 @@
 
 // TODO: See https://firebase.google.com/docs/web/setup for how to configure access to Firebase
 const firebaseConfig = {
-  apiKey: 'AIzaSyAYVr95aB7HYrZ2YsL8ZDgOqhIDjEOmYb4',
-  authDomain: 'armadatest-d8387.firebaseapp.com',
-  databaseURL: 'https://armadatest-d8387.firebaseio.com',
-  projectId: 'armadatest-d8387',
-  storageBucket: 'armadatest-d8387.appspot.com',
-  messagingSenderId: '745841169798'
+  apiKey: 'AIzaSyApf-dwUYAlnupmkNeWKgpwTd5irz_3-KM',
+  authDomain: 'armada-220507.firebaseapp.com',
+  databaseURL: 'https://armada-220507.firebaseio.com',
+  projectId: 'armada-220507',
+  storageBucket: 'armada-220507.appspot.com',
+  messagingSenderId: '114906890295'
 };
 
 const mapStyle = [
@@ -357,6 +357,32 @@ class Card {
   }
 }
 
+function initMap() {}
+
+function calculateAndDisplayRoute(
+  directionsService,
+  directionsDisplay,
+  curLat,
+  curLong
+) {
+  directionsService.route(
+    {
+      origin: { lat: curLat, lng: curLong }, // Haight.
+      destination: { lat: 14.55118755, lng: 121.02602667 }, // Ocean Beach.
+      // Note that Javascript allows us to access the constant
+      // using square brackets and a string value as its
+      // "property."
+      travelMode: 'DRIVING'
+    },
+    function(response, status) {
+      if (status == 'OK') {
+        directionsDisplay.setDirections(response);
+      } else {
+        window.alert('Directions request failed due to ' + status);
+      }
+    }
+  );
+}
 function renderCard(data) {
   const card = new Card(data);
   return card.render;
@@ -390,7 +416,7 @@ function renderPanels(panels) {
 function colorToBusMarker(color) {
   switch (color) {
     case 'FCE444':
-      return '/images/dashboard/busmarker_yellow.png';
+      return '/images/truck_icon.png';
     case 'C4E86B':
       return '/images/dashboard/busmarker_lime.png';
     case '00C1DE':
@@ -448,107 +474,20 @@ function initMap() {
     streetViewControl: false
   });
 
-  // Put I/O on the map
-  geocodeAddress(
-    '1 Amphitheatre Pkwy, Mountain View, CA 94043',
-    map,
-    '/images/dashboard/logo_io_64.png',
-    'Google I/O'
-  );
+  var directionsDisplay = new google.maps.DirectionsRenderer();
+  var directionsService = new google.maps.DirectionsService();
 
-  const markerManager = new MarkerManager(map);
-  const cardsElement = document.getElementsByClassName('cards')[0];
-  const displayTimeElement = document.getElementsByClassName('display-time')[0];
+  directionsDisplay.setMap(map);
 
   firebase.initializeApp(firebaseConfig);
 
   const db = firebase.database();
-  var Item_1 = new google.maps.LatLng(14.5853408, 121.0490504);
-  var myPlace = new google.maps.LatLng(14.5853408, 121.0490504);
-  var bounds = new google.maps.LatLngBounds();
-
-  bounds.extend(myPlace);
-  bounds.extend(Item_1);
-
-  db.ref('map').on('value', snapshot => {
-    const val = snapshot.val();
-    map.fitBounds(bounds);
-
-    markerManager.clear();
-    val.markers.forEach(marker => {
-      markerManager.add(
-        {
-          lat: marker.lat,
-          lng: marker.lng
-        },
-        marker.iconPath,
-        marker.name
-      );
-    });
-
-    cardsElement.style['top'] = `calc(${val.panel * -100}vh - ${val.panel *
-      64}px)`;
-
-    // pageMarkerPanelElts.forEach(elt => {
-    //   elt.classList.remove('selected');
-    // });
-    // pageMarkerPanelElts[val.panel].classList.add('selected');
-  });
-
-  db.ref('current-time').on('value', snapshot => {
-    displayTimeElement.textContent = snapshot.val().display;
-  });
-
-  // const truckLocationMarkers = {};
-  // db.ref('location').on('value', snapshot => {
-  //   const val = snapshot.val();
-
-  //   for (let key in truckLocationMarkers) {
-  //     if (val === null || !(key in val)) {
-  //       const marker = truckLocationMarkers[key];
-  //       marker.setMap(null);
-  //       delete truckLocationMarkers[key];
-  //     }
-  //   }
-
-  //   for (let key in val) {
-  //     const truck = val[key];
-
-  //     if (truck.latitude) {
-  //       console.log(truck);
-  //       if (key in truckLocationMarkers) {
-  //         const marker = truckLocationMarkers[key];
-  //         marker.setPosition({
-  //           lat: truck.latitude,
-  //           lng: truck.longitude
-  //         });
-  //       } else {
-  //         const url = colorToBusMarker('00C1DE');
-  //         const marker = new google.maps.Marker({
-  //           position: {
-  //             lat: truck.latitude,
-  //             lng: truck.longitude
-  //           },
-  //           map: map,
-  //           icon: {
-  //             url,
-  //             anchor: new google.maps.Point(30, 30) // truck markers are 60x60 px
-  //           },
-  //           title: 'Shaw Boulevard',
-  //           optimized: false
-  //         });
-
-  //         truckLocationMarkers[key] = marker;
-  //       }
-  //     }
-  //   }
-  // });
 
   const busLocationMarkers = {};
 
-  db.ref('location').on('value', snapshot => {
+  db.ref('company/-LPxvMsMRwVtY_daa2yL/vehicles').on('value', snapshot => {
     const val = snapshot.val();
-    console.log(busLocationMarkers);
+
     for (let key in busLocationMarkers) {
       if (val === null || !(key in val)) {
         const marker = busLocationMarkers[key];
@@ -559,35 +498,54 @@ function initMap() {
 
     for (let key in val) {
       const bus = val[key];
-      console.log(bus);
-      if (bus.latitude) {
-        if (key in busLocationMarkers) {
-          console.log('if');
-          console.log(bus.latitude, bus.longitude);
-          const marker = busLocationMarkers[key];
-          marker.setPosition({
-            lat: bus.latitude,
-            lng: bus.longitude
-          });
-        } else {
-          console.log('else');
-          console.log(bus.latitude, bus.longitude);
 
-          const url = colorToBusMarker('00C1DE');
-          const marker = new google.maps.Marker({
-            position: {
-              lat: bus.latitude,
-              lng: bus.longitude
-            },
-            map: map,
-            icon: {
-              url,
-              anchor: new google.maps.Point(30, 30) // Bus markers are 60x60 px
-            },
-            title: bus.route_name,
-            optimized: false
-          });
-          busLocationMarkers[key] = marker;
+      if (bus.is_active) {
+        const location = bus.location;
+        // console.log(bus.is_active);
+        // console.log(bus);
+        // console.log(location);
+        // console.log(key);
+        if (location.latitude) {
+          position = new google.maps.LatLng(
+            location.latitude,
+            location.longitude
+          );
+
+          if (key in busLocationMarkers) {
+            const marker = busLocationMarkers[key];
+            marker.setPosition({
+              lat: location.latitude,
+              lng: location.longitude
+            });
+          } else {
+            const url = colorToBusMarker('FCE444');
+            var position = new google.maps.LatLng(
+              location.latitude,
+              location.longitude
+            );
+
+            const marker = new google.maps.Marker({
+              position: {
+                lat: location.latitude,
+                lng: location.longitude
+              },
+              map: map,
+              icon: {
+                url,
+                anchor: new google.maps.Point(30, 30) // Bus markers are 60x60 px
+              },
+              title: key,
+              optimized: false
+            });
+
+            busLocationMarkers[key] = marker;
+          }
+          calculateAndDisplayRoute(
+            directionsService,
+            directionsDisplay,
+            location.latitude,
+            location.longitude
+          );
         }
       }
     }
